@@ -13,6 +13,7 @@ dist/
 
 # local environment / secrets
 .env
+.env.local
 .env.*
 !.env.example
 
@@ -64,6 +65,7 @@ lerna-debug.log*
 # local context / generated references
 CONTEXT.md
 UI-REF.png
+SIGNUP-REF.png
 
 # misc
 *.tmp
