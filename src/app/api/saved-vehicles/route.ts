@@ -39,7 +39,15 @@ export async function POST(request: Request) {
     const model = typeof body?.model === "string" ? body.model.trim() : "";
     const modelYear = Number(body?.modelYear);
 
-    if (!make || !model || !Number.isInteger(modelYear) || modelYear < 1900 || modelYear > 2100) {
+    if (
+      !make ||
+      !model ||
+      make.length > 100 ||
+      model.length > 100 ||
+      !Number.isInteger(modelYear) ||
+      modelYear < 1900 ||
+      modelYear > 2100
+    ) {
       return NextResponse.json(
         { error: "invalid vehicle parameters." },
         { status: 400 },

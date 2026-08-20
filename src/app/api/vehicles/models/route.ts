@@ -6,7 +6,13 @@ export async function GET(request: Request) {
   const make = searchParams.get("make");
   const year = Number(searchParams.get("year"));
 
-  if (!make || !Number.isInteger(year) || year < 1900 || year > 2100) {
+  if (
+    !make ||
+    make.length > 100 ||
+    !Number.isInteger(year) ||
+    year < 1900 ||
+    year > 2100
+  ) {
     return NextResponse.json(
       { error: "invalid vehicle parameters." },
       { status: 400 },

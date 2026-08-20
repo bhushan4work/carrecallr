@@ -16,8 +16,11 @@ function parseSubscription(body: unknown): webpush.PushSubscription | null {
   if (
     typeof sub.endpoint !== "string" ||
     !sub.endpoint.startsWith("http") ||
+    sub.endpoint.length > 500 ||
     typeof sub.keys?.p256dh !== "string" ||
-    typeof sub.keys?.auth !== "string"
+    sub.keys.p256dh.length > 256 ||
+    typeof sub.keys?.auth !== "string" ||
+    sub.keys.auth.length > 256
   ) {
     return null;
   }
@@ -57,7 +60,7 @@ export async function DELETE(request: Request) {
     const userId = await requireUserId();
     const { searchParams } = new URL(request.url);
     const endpoint = searchParams.get("endpoint");
-    if (!endpoint) {
+    if (!endpoint || endpoint.length > 500) {
       return NextResponse.json({ error: "invalid subscription." }, { status: 400 });
     }
     await deletePushSubscription(userId, endpoint);

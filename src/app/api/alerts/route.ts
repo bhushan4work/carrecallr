@@ -8,11 +8,11 @@ import {
 export async function PATCH(request: Request) {
   try {
     const userId = await requireUserId();
-    const body = await request.json();
-    const vehicleKey = typeof body?.vehicleKey === "string" ? body.vehicleKey : "";
+    const body = await request.json().catch(() => null);
+    const vehicleKey = typeof body?.vehicleKey === "string" ? body.vehicleKey.trim() : "";
     const alertsEnabled = Boolean(body?.alertsEnabled);
 
-    if (!vehicleKey) {
+    if (!vehicleKey || vehicleKey.length > 200) {
       return NextResponse.json({ error: "invalid vehicle." }, { status: 400 });
     }
 

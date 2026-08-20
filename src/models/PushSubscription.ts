@@ -63,3 +63,9 @@ export async function deletePushSubscriptionById(id: unknown): Promise<boolean> 
   });
   return result.deletedCount > 0;
 }
+
+export async function deletePushSubscriptionsByUser(
+  userId: string,
+): Promise<void> {
+  await pushSubscriptionsCollection().deleteMany({ userId });
+}

@@ -24,7 +24,11 @@ export default function AccountPage() {
     setDeleting(true);
     setError(null);
     try {
-      await user?.delete();
+      const res = await fetch("/api/account", { method: "DELETE" });
+      if (!res.ok) {
+        throw new Error("delete failed");
+      }
+      await signOut();
       router.push("/");
     } catch {
       setError("couldn't delete account. please try again later.");

@@ -43,3 +43,7 @@ export async function recordAlertEvent(
     sentAt: new Date(),
   });
 }
+
+export async function deleteAlertEventsByUser(userId: string): Promise<void> {
+  await alertEventsCollection().deleteMany({ userId });
+}

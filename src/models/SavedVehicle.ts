@@ -69,6 +69,12 @@ export async function removeSavedVehicle(
   return result.deletedCount > 0;
 }
 
+export async function deleteSavedVehiclesByUser(
+  userId: string,
+): Promise<void> {
+  await savedVehiclesCollection().deleteMany({ userId });
+}
+
 export async function findAllSavedVehicles(): Promise<SavedVehicleDoc[]> {
   return savedVehiclesCollection()
     .find({})
