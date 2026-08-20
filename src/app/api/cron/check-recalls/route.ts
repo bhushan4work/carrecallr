@@ -26,7 +26,9 @@ function isAuthorized(request: Request): boolean {
   if (!secret) {
     return false;
   }
-  return request.headers.get("x-cron-secret") === secret;
+  const authorization = request.headers.get("authorization");
+  const cronSecret = request.headers.get("x-cron-secret");
+  return authorization === `Bearer ${secret}` || cronSecret === secret;
 }
 
 function summarize(text: string, max = 160): string {
