@@ -67,7 +67,8 @@ export function NotificationSubscribeButton() {
           if (!res.ok) throw new Error("failed to sync subscription");
         });
         if (!cancelled) setStatus("enabled");
-      } catch {
+      } catch (err) {
+        console.error("[push] sync existing subscription failed:", err);
         if (!cancelled) setStatus("ready");
       }
     })();
@@ -107,8 +108,13 @@ export function NotificationSubscribeButton() {
         return;
       }
       setStatus("enabled");
-    } catch {
-      setError("couldn't enable notifications right now.");
+    } catch (err) {
+      console.error("[push] enable failed:", err);
+      setError(
+        err instanceof Error
+          ? `couldn't enable notifications: ${err.name}`
+          : "couldn't enable notifications right now.",
+      );
     } finally {
       setBusy(false);
     }
@@ -129,7 +135,8 @@ export function NotificationSubscribeButton() {
         });
       }
       setStatus("ready");
-    } catch {
+    } catch (err) {
+      console.error("[push] disable failed:", err);
       setError("couldn't disable notifications right now.");
     } finally {
       setBusy(false);
@@ -162,7 +169,12 @@ export function NotificationSubscribeButton() {
           {busy ? "enabling…" : "enable browser notifications"}
         </Button>
       )}
-      {error ? <p className={cn("text-xs text-danger")}>{error}</p> : null}
+      <p
+        className={cn("min-h-4 text-xs leading-4 text-danger")}
+        aria-live="polite"
+      >
+        {error ?? ""}
+      </p>
     </div>
   );
 }
