@@ -20,7 +20,7 @@ export default function Home() {
           <div className="mt-10 w-full max-w-3xl">
             <VehicleSearch />
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">
+          <p className="mt-8 text-sm text-muted-foreground">
             search by model year, make, and model · powered by nhtsa data
           </p>
         </section>

@@ -17,10 +17,14 @@ export async function nhtsaFetch<T>(url: string): Promise<T> {
         await sleep(800);
         continue;
       }
+      console.error("[nhtsa] request failed (network):", url);
       throw new NhtsaError("couldn't reach nhtsa");
     }
 
     if (!res.ok) {
+      if (res.status !== 400) {
+        console.error("[nhtsa] non-ok response:", res.status, url);
+      }
       throw new NhtsaError(`nhtsa request failed (${res.status})`, res.status);
     }
 

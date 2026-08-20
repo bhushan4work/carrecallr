@@ -1,5 +1,5 @@
 import { cached } from "@/src/lib/cache";
-import { nhtsaFetch } from "./client";
+import { nhtsaFetch, NhtsaError } from "./client";
 import type { RecallsResponse } from "./types";
 import type { VehicleRecall } from "@/src/types/recall";
 
@@ -43,7 +43,12 @@ export async function getVehicleRecalls(
   const key = `recalls:${make.toLowerCase()}:${model.toLowerCase()}:${year}`;
   return cached(key, async () => {
     const url = `https://api.nhtsa.gov/recalls/recallsByVehicle?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&modelYear=${year}`;
-    const data = await nhtsaFetch<RecallsResponse>(url);
+    const data = await nhtsaFetch<RecallsResponse>(url).catch((err) => {
+      if (err instanceof NhtsaError && err.status === 400) {
+        return { Count: 0, Message: "", results: [] };
+      }
+      throw err;
+    });
     const results = Array.isArray(data.results) ? data.results : [];
     return results.map((r) => {
       const { year: recallYear, date } = parseReportDate(r.ReportReceivedDate);

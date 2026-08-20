@@ -99,7 +99,7 @@ export function VehicleSearch() {
     setModelsError(false);
   };
 
-  const ready = Boolean(year && make && (model || noModels));
+  const ready = Boolean(year && make && model);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,9 +108,8 @@ export function VehicleSearch() {
       router.push("/signup");
       return;
     }
-    const modelSegment = noModels ? "none" : model;
     router.push(
-      `/vehicle/${encodeURIComponent(make)}/${encodeURIComponent(modelSegment)}/${year}`,
+      `/vehicle/${encodeURIComponent(make)}/${encodeURIComponent(model)}/${year}`,
     );
   };
 
@@ -148,35 +147,34 @@ export function VehicleSearch() {
           ))}
         </Select>
 
-        <Select
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          aria-label="Vehicle model"
-          disabled={!year || !make || loadingModels || models.length === 0}
-          className="flex-1"
-        >
-          <option value="">
-            {loadingModels
-              ? "loading models…"
-              : !make
-                ? "model"
-                : models.length === 0
-                  ? "no models found"
-                  : "model"}
-          </option>
-          {models.map((m) => (
-            <option key={m} value={m}>
-              {m}
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <Select
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            aria-label="Vehicle model"
+            disabled={!year || !make || loadingModels || models.length === 0}
+          >
+            <option value="">
+              {loadingModels
+                ? "loading models…"
+                : !make
+                  ? "model"
+                  : models.length === 0
+                    ? "no models found"
+                    : "model"}
             </option>
-          ))}
-        </Select>
-
-        {noModels ? (
-          <p className="text-center text-sm text-muted-foreground sm:text-left">
-            no model listed for this make &amp; year — searching by make &amp;
-            year only.
-          </p>
-        ) : null}
+            {models.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </Select>
+          {noModels ? (
+            <p className="text-xs text-muted-foreground">
+              no model for this make &amp; year
+            </p>
+          ) : null}
+        </div>
 
         <Button type="submit" size="lg" className="h-12 shrink-0" disabled={!authLoaded || !ready}>
           search
