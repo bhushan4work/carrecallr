@@ -5,7 +5,8 @@ import {
 } from "@/src/lib/push";
 import { getVehicleRecalls } from "@/src/lib/nhtsa/recalls";
 import {
-  findSavedVehiclesWithAlertsEnabled,
+  findAllSavedVehicles,
+  setSavedVehicleLastChecked,
   type SavedVehicleDoc,
 } from "@/src/models/SavedVehicle";
 import {
@@ -17,6 +18,10 @@ import {
   findNotifiedCampaigns,
   recordAlertEvent,
 } from "@/src/models/AlertEvent";
+import {
+  ensureRecallIndexes,
+  upsertRecalls,
+} from "@/src/models/Recall";
 import type { VehicleRecall } from "@/src/types/recall";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +50,7 @@ export async function GET(request: Request) {
   const stats = {
     users: 0,
     vehiclesChecked: 0,
+    recallsStored: 0,
     newRecallsFound: 0,
     notificationsSent: 0,
     duplicatesSkipped: 0,
@@ -52,8 +58,8 @@ export async function GET(request: Request) {
   };
 
   try {
-    await ensureAlertEventIndexes();
-    const vehicles = await findSavedVehiclesWithAlertsEnabled();
+    await Promise.all([ensureAlertEventIndexes(), ensureRecallIndexes()]);
+    const vehicles = await findAllSavedVehicles();
 
     const byUser = new Map<string, SavedVehicleDoc[]>();
     for (const vehicle of vehicles) {
@@ -63,12 +69,14 @@ export async function GET(request: Request) {
     }
 
     for (const [userId, userVehicles] of byUser) {
-      let subscriptions;
-      try {
-        subscriptions = await findPushSubscriptionsByUser(userId);
-      } catch {
-        stats.errors += 1;
-        continue;
+      const hasAlerts = userVehicles.some((v) => v.alertsEnabled);
+      let subscriptions: Awaited<ReturnType<typeof findPushSubscriptionsByUser>> = [];
+      if (hasAlerts) {
+        try {
+          subscriptions = await findPushSubscriptionsByUser(userId);
+        } catch {
+          stats.errors += 1;
+        }
       }
       stats.users += 1;
 
@@ -84,6 +92,22 @@ export async function GET(request: Request) {
           );
         } catch {
           stats.errors += 1;
+          continue;
+        }
+
+        try {
+          await upsertRecalls(vehicle.vehicleKey, recalls);
+          stats.recallsStored += recalls.length;
+        } catch {
+          stats.errors += 1;
+        }
+        try {
+          await setSavedVehicleLastChecked(userId, vehicle.vehicleKey, new Date());
+        } catch {
+          stats.errors += 1;
+        }
+
+        if (!vehicle.alertsEnabled) {
           continue;
         }
         if (recalls.length === 0) {

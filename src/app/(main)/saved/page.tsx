@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Badge } from "@/src/components/ui/badge";
 import { Breadcrumb } from "@/src/components/ui/breadcrumb";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
@@ -8,6 +9,10 @@ import { AlertToggleButton } from "@/src/components/vehicle/alert-toggle-button"
 import { NotificationSubscribeButton } from "@/src/components/push/notification-subscribe-button";
 import { requirePageUser } from "@/src/lib/auth";
 import { findSavedVehicles } from "@/src/models/SavedVehicle";
+import {
+  findRecallsByVehicleKeys,
+  type StoredRecallDoc,
+} from "@/src/models/Recall";
 
 function formatDate(d: Date): string {
   return d.toLocaleDateString(undefined, {
@@ -26,6 +31,40 @@ export default async function SavedVehiclesPage() {
     vehicles = await findSavedVehicles(userId);
   } catch {
     loadError = true;
+  }
+
+  let recallDataLoaded = false;
+  const recallsByKey = new Map<string, StoredRecallDoc[]>();
+  try {
+    const stored = await findRecallsByVehicleKeys(
+      vehicles.map((v) => v.vehicleKey),
+    );
+    for (const recall of stored) {
+      const list = recallsByKey.get(recall.vehicleKey) ?? [];
+      list.push(recall);
+      recallsByKey.set(recall.vehicleKey, list);
+    }
+    recallDataLoaded = true;
+  } catch {
+    // cards render without the recall summary when the db read fails
+  }
+
+  const recallSummary = new Map<
+    string,
+    { count: number; latestYear: number | null; lastChecked: Date | null }
+  >();
+  if (recallDataLoaded) {
+    for (const v of vehicles) {
+      const recalls = recallsByKey.get(v.vehicleKey) ?? [];
+      const years = recalls
+        .map((r) => r.year)
+        .filter((y) => Number.isFinite(y));
+      recallSummary.set(v.vehicleKey, {
+        count: recalls.length,
+        latestYear: years.length ? Math.max(...years) : null,
+        lastChecked: v.lastCheckedAt ?? null,
+      });
+    }
   }
 
   return (
@@ -97,6 +136,27 @@ export default async function SavedVehiclesPage() {
                       </Link>
                       <RemoveSavedVehicleButton vehicleKey={v.vehicleKey} />
                     </div>
+                    {(() => {
+                      const info = recallSummary.get(v.vehicleKey);
+                      if (!info) return null;
+                      return (
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <Badge variant={info.count > 0 ? "danger" : "success"}>
+                            {info.count} recall{info.count === 1 ? "" : "s"}
+                          </Badge>
+                          {info.latestYear !== null && (
+                            <Badge variant="neutral">
+                              latest {info.latestYear}
+                            </Badge>
+                          )}
+                          {info.lastChecked && (
+                            <span className="text-xs text-muted-foreground">
+                              last checked {formatDate(info.lastChecked)}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <AlertToggleButton

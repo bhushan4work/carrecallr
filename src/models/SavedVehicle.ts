@@ -9,6 +9,7 @@ export type SavedVehicle = {
   modelYear: number;
   alertsEnabled: boolean;
   createdAt: Date;
+  lastCheckedAt?: Date;
 };
 
 export type SavedVehicleDoc = WithId<Document> & SavedVehicle;
@@ -68,13 +69,22 @@ export async function removeSavedVehicle(
   return result.deletedCount > 0;
 }
 
-export async function findSavedVehiclesWithAlertsEnabled(): Promise<
-  SavedVehicleDoc[]
-> {
+export async function findAllSavedVehicles(): Promise<SavedVehicleDoc[]> {
   return savedVehiclesCollection()
-    .find({ alertsEnabled: true })
+    .find({})
     .sort({ createdAt: -1 })
     .toArray();
+}
+
+export async function setSavedVehicleLastChecked(
+  userId: string,
+  vehicleKey: string,
+  checkedAt: Date,
+): Promise<void> {
+  await savedVehiclesCollection().updateOne(
+    { userId, vehicleKey },
+    { $set: { lastCheckedAt: checkedAt } },
+  );
 }
 
 export async function setSavedVehicleAlerts(
