@@ -203,21 +203,8 @@ export function AuthShell({ children, title, description }: AuthShellProps) {
         {/* Bottom legal line */}
         <div className="px-6 pb-8 text-center">
           <p className="text-sm leading-relaxed text-muted-foreground">
-            By signing in, you agree to our{" "}
-            <Link
-              href="/terms"
-              className="font-medium text-primary hover:underline"
-            >
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="/privacy"
-              className="font-medium text-primary hover:underline"
-            >
-              Privacy Policy
-            </Link>
-            .
+            recall data provided by the u.s. national highway traffic safety
+            administration (nhtsa).
           </p>
         </div>
       </div>

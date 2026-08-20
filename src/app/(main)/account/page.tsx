@@ -9,13 +9,11 @@ import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Container } from "@/src/components/ui/container";
 import { Input } from "@/src/components/ui/input";
-import { Toggle } from "@/src/components/ui/toggle";
 
 export default function AccountPage() {
   const { isLoaded: userLoaded, isSignedIn, user } = useUser();
   const { signOut } = useAuth();
   const router = useRouter();
-  const [alertsEnabled, setAlertsEnabled] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,7 +49,7 @@ export default function AccountPage() {
             account
           </h1>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            manage your email preferences and recall alerts for saved vehicles.
+            manage your account and sign out.
           </p>
         </header>
 
@@ -81,7 +79,7 @@ export default function AccountPage() {
             <div className="mt-10 max-w-3xl space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>email preferences</CardTitle>
+                  <CardTitle>account email</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <label
@@ -98,25 +96,8 @@ export default function AccountPage() {
                     className="mt-1.5 max-w-md"
                   />
                   <p className="mt-1.5 text-xs text-muted-foreground">
-                    recall alerts are sent to this email address.
+                    the email address on your account.
                   </p>
-
-                  <div className="mt-6 flex items-center justify-between gap-4 border-t border-border pt-5">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        recall alerts
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        email me when a new recall is detected for one of my saved
-                        vehicles.
-                      </p>
-                    </div>
-                    <Toggle
-                      checked={alertsEnabled}
-                      onCheckedChange={setAlertsEnabled}
-                      aria-label="Toggle recall alerts"
-                    />
-                  </div>
                 </CardContent>
               </Card>
 
@@ -139,8 +120,8 @@ export default function AccountPage() {
             </div>
 
             <p className="mt-8 max-w-3xl text-xs text-muted-foreground">
-              signed in as {accountEmail}. saved vehicles, alerts, and email
-              delivery are not wired up yet.
+              signed in as {accountEmail}. enable browser notifications on the
+              saved vehicles page to get an alert when a new recall is detected.
             </p>
           </>
         )}

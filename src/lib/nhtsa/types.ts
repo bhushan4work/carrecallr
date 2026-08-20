@@ -22,6 +22,7 @@ export type RawRecall = {
   ModelYear: string;
   Make: string;
   Model: string;
+  PotentialNumberOfUnitsAffected?: string | number | null;
 };
 
 export type RecallsResponse = {

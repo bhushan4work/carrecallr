@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { currentUser } from "@clerk/nextjs/server";
 import { Breadcrumb } from "@/src/components/ui/breadcrumb";
 import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { Container } from "@/src/components/ui/container";
 import { RemoveSavedVehicleButton } from "@/src/components/vehicle/remove-saved-vehicle-button";
+import { AlertToggleButton } from "@/src/components/vehicle/alert-toggle-button";
+import { NotificationSubscribeButton } from "@/src/components/push/notification-subscribe-button";
 import { requirePageUser } from "@/src/lib/auth";
 import { findSavedVehicles } from "@/src/models/SavedVehicle";
 
@@ -19,7 +19,6 @@ function formatDate(d: Date): string {
 
 export default async function SavedVehiclesPage() {
   const userId = await requirePageUser();
-  const user = await currentUser();
 
   let vehicles: Awaited<ReturnType<typeof findSavedVehicles>> = [];
   let loadError = false;
@@ -45,13 +44,16 @@ export default async function SavedVehiclesPage() {
               my vehicles
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              vehicles you&apos;re tracking. recall data is checked daily, and alerts are
-              sent by email when a new recall is detected.
+              vehicles you&apos;re tracking. recall data is checked daily, and you get a
+              browser notification when a new recall is detected.
             </p>
           </div>
-          <Link href="/" className="shrink-0">
-            <Button variant="outline">add vehicle</Button>
-          </Link>
+          <div className="flex shrink-0 items-center gap-3">
+            <NotificationSubscribeButton />
+            <Link href="/" className="shrink-0">
+              <Button variant="outline">add vehicle</Button>
+            </Link>
+          </div>
         </header>
 
         <section className="mt-10">
@@ -95,12 +97,13 @@ export default async function SavedVehiclesPage() {
                       </Link>
                       <RemoveSavedVehicleButton vehicleKey={v.vehicleKey} />
                     </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {v.alertsEnabled ? (
-                        <Badge variant="success">alerts on</Badge>
-                      ) : (
-                        <Badge variant="neutral">alerts off</Badge>
-                      )}
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <AlertToggleButton
+                          vehicleKey={v.vehicleKey}
+                          initialEnabled={v.alertsEnabled}
+                        />
+                      </div>
                       <span className="text-xs text-muted-foreground">
                         saved {formatDate(v.createdAt)}
                       </span>
@@ -113,9 +116,8 @@ export default async function SavedVehiclesPage() {
         </section>
 
         <p className="mt-8 text-xs text-muted-foreground">
-          alerts are sent to{" "}
-          {user?.primaryEmailAddress?.emailAddress ?? "the email on your account"} when a new
-          recall campaign is detected for a saved vehicle.
+          enable browser notifications to receive an alert when a new recall
+          campaign is detected for a saved vehicle with alerts enabled.
         </p>
       </main>
     </Container>

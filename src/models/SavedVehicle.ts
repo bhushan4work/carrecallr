@@ -67,3 +67,24 @@ export async function removeSavedVehicle(
   });
   return result.deletedCount > 0;
 }
+
+export async function findSavedVehiclesWithAlertsEnabled(): Promise<
+  SavedVehicleDoc[]
+> {
+  return savedVehiclesCollection()
+    .find({ alertsEnabled: true })
+    .sort({ createdAt: -1 })
+    .toArray();
+}
+
+export async function setSavedVehicleAlerts(
+  userId: string,
+  vehicleKey: string,
+  alertsEnabled: boolean,
+): Promise<SavedVehicleDoc | null> {
+  await savedVehiclesCollection().updateOne(
+    { userId, vehicleKey },
+    { $set: { alertsEnabled } },
+  );
+  return findSavedVehicle(userId, vehicleKey);
+}

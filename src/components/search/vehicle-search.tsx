@@ -14,6 +14,7 @@ export function VehicleSearch() {
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [modelsKey, setModelsKey] = useState<string>("");
+  const [modelsError, setModelsError] = useState(false);
   const [year, setYear] = useState("");
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
@@ -59,13 +60,17 @@ export function VehicleSearch() {
         setModels(data.models ?? []);
         setModelsKey(key);
         if (data.error) {
+          setModelsError(true);
           setError(data.error);
+        } else {
+          setModelsError(false);
         }
       })
       .catch(() => {
         if (!cancelled) {
           setModels([]);
           setModelsKey(key);
+          setModelsError(true);
           setError("couldn't load vehicle models.");
         }
       });
@@ -76,17 +81,25 @@ export function VehicleSearch() {
 
   const loadingModels = Boolean(year && make) && modelsKey !== `${year}|${make}`;
 
+  const noModels =
+    Boolean(year && make) &&
+    !loadingModels &&
+    !modelsError &&
+    models.length === 0;
+
   const handleYearChange = (value: string) => {
     setYear(value);
     setModel("");
+    setModelsError(false);
   };
 
   const handleMakeChange = (value: string) => {
     setMake(value);
     setModel("");
+    setModelsError(false);
   };
 
-  const ready = Boolean(year && make && model);
+  const ready = Boolean(year && make && (model || noModels));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,8 +108,9 @@ export function VehicleSearch() {
       router.push("/signup");
       return;
     }
+    const modelSegment = noModels ? "none" : model;
     router.push(
-      `/vehicle/${encodeURIComponent(make)}/${encodeURIComponent(model)}/${year}`,
+      `/vehicle/${encodeURIComponent(make)}/${encodeURIComponent(modelSegment)}/${year}`,
     );
   };
 
@@ -156,6 +170,13 @@ export function VehicleSearch() {
             </option>
           ))}
         </Select>
+
+        {noModels ? (
+          <p className="text-center text-sm text-muted-foreground sm:text-left">
+            no model listed for this make &amp; year — searching by make &amp;
+            year only.
+          </p>
+        ) : null}
 
         <Button type="submit" size="lg" className="h-12 shrink-0" disabled={!authLoaded || !ready}>
           search

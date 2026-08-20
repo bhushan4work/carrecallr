@@ -40,7 +40,8 @@ export async function generateMetadata({
   params: Promise<{ make: string; model: string; year: string }>;
 }): Promise<Metadata> {
   const { make, model, year } = await params;
-  return { title: `${year} ${make} ${model}` };
+  const noModel = model.toLowerCase() === "none";
+  return { title: noModel ? `${year} ${make}` : `${year} ${make} ${model}` };
 }
 
 export default async function VehicleProfilePage({
@@ -51,6 +52,8 @@ export default async function VehicleProfilePage({
   await requirePageUser();
   const { make, model, year } = await params;
   const modelYear = Number(year);
+  const noModel = model.toLowerCase() === "none";
+  const vehicleName = noModel ? `${year} ${make}` : `${year} ${make} ${model}`;
 
   const [recalls, rating] = await Promise.all([
     getVehicleRecalls(make, model, modelYear).catch(() => null),
@@ -61,10 +64,11 @@ export default async function VehicleProfilePage({
   const data = recalls ?? [];
 
   const totalRecalls = data.length;
-  const affectedVehicles = data.reduce(
-    (sum, r) => sum + (r.affected ?? 0),
-    0,
-  );
+  const affectedCounts = data
+    .map((r) => r.affected)
+    .filter((n): n is number => n !== null);
+  const affectedVehicles = affectedCounts.reduce((sum, n) => sum + n, 0);
+  const hasAffected = affectedCounts.length > 0;
   const latestRecall = data[0];
 
   const yearly = Array.from(
@@ -95,18 +99,26 @@ export default async function VehicleProfilePage({
     <Container className="flex flex-1 flex-col">
       <main className="flex-1 pb-24 pt-10 sm:pt-14">
         <Breadcrumb
-          items={[
-            { label: "search", href: "/" },
-            { label: make },
-            { label: model },
-            { label: year },
-          ]}
+          items={
+            noModel
+              ? [
+                  { label: "search", href: "/" },
+                  { label: make },
+                  { label: year },
+                ]
+              : [
+                  { label: "search", href: "/" },
+                  { label: make },
+                  { label: model },
+                  { label: year },
+                ]
+          }
         />
 
         <header className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              {year} {make} {model}
+              {vehicleName}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Badge variant={totalRecalls > 0 ? "danger" : "success"}>
@@ -119,7 +131,9 @@ export default async function VehicleProfilePage({
             </div>
           </div>
           <div className="shrink-0">
-            <SaveVehicleButton make={make} model={model} modelYear={modelYear} />
+            {noModel ? null : (
+              <SaveVehicleButton make={make} model={model} modelYear={modelYear} />
+            )}
           </div>
         </header>
 
@@ -137,13 +151,16 @@ export default async function VehicleProfilePage({
             <section className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
               <Stat label="total recalls" value={String(totalRecalls)} />
               <Stat label="safety rating" value={rating ? `${rating}/5` : "n/a"} sub="overall nhtsa rating" />
-              <Stat label="affected vehicles" value={formatCount(affectedVehicles)} />
+              <Stat
+                label="affected vehicles"
+                value={hasAffected ? formatCount(affectedVehicles) : "n/a"}
+              />
               <Stat
                 label="latest recall"
                 value={latestRecall ? String(latestRecall.year) : "none"}
                 sub={latestRecall?.component}
               />
-              <Stat label="data source" value="nhtsa" sub="live fetch" />
+              <Stat label="data source" value="nhtsa" sub="official nhtsa data" />
             </section>
 
             <section className="mt-14">
@@ -179,7 +196,9 @@ export default async function VehicleProfilePage({
                 ) : (
                   <CardContent className="py-8">
                     <p className="text-sm text-muted-foreground">
-                      no recalls recorded for this vehicle.
+                      {noModel
+                        ? "nhtsa records recalls by specific model, and no model is listed for this make & year, so no recall records are available."
+                        : "no recalls recorded for this vehicle."}
                     </p>
                   </CardContent>
                 )}

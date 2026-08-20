@@ -27,6 +27,14 @@ function parseReportDate(value: string): { year: number; date: string } {
   return { year, date: `${monthName} ${day}, ${year}` };
 }
 
+function toAffected(
+  raw: string | number | null | undefined,
+): number | null {
+  if (raw == null || raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
 export async function getVehicleRecalls(
   make: string,
   model: string,
@@ -47,7 +55,7 @@ export async function getVehicleRecalls(
         summary: r.Summary,
         consequence: r.Consequence,
         remedy: r.Remedy,
-        affected: null,
+        affected: toAffected(r.PotentialNumberOfUnitsAffected),
         manufacturer: r.Manufacturer,
         sourceUrl: `https://www.nhtsa.gov/recalls?nhtsaId=${r.NHTSACampaignNumber}`,
       };
