@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/src/components/ui/button";
-import { cn } from "@/src/lib/utils";
 
 type Status = "checking" | "unsupported" | "denied" | "ready" | "enabled";
 
@@ -34,6 +33,32 @@ async function getRegistration(): Promise<ServiceWorkerRegistration> {
   }
   await navigator.serviceWorker.register(SW_URL);
   return navigator.serviceWorker.ready;
+}
+
+async function subscribeWithRetry(
+  applicationServerKey: Uint8Array<ArrayBuffer>,
+): Promise<PushSubscription> {
+  const subscribe = async (
+    registration: ServiceWorkerRegistration,
+  ): Promise<PushSubscription> => {
+    try {
+      return await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey,
+      });
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        await registration.unregister().catch(() => false);
+        const fresh = await navigator.serviceWorker.register(SW_URL);
+        return fresh.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey,
+        });
+      }
+      throw err;
+    }
+  };
+  return subscribe(await getRegistration());
 }
 
 export function NotificationSubscribeButton() {
@@ -93,11 +118,9 @@ export function NotificationSubscribeButton() {
         return;
       }
       const { publicKey } = await keyRes.json();
-      const registration = await getRegistration();
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-      });
+      const subscription = await subscribeWithRetry(
+        urlBase64ToUint8Array(publicKey),
+      );
       const res = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,6 +133,11 @@ export function NotificationSubscribeButton() {
       setStatus("enabled");
     } catch (err) {
       console.error("[push] enable failed:", err);
+      if (err instanceof DOMException && err.name === "AbortError") {
+        console.warn(
+          "[push] the push service rejected the subscription. if you're using brave or a privacy blocker, disable shields/blocking for this site and try again.",
+        );
+      }
       setError(
         err instanceof Error
           ? `couldn't enable notifications: ${err.name}`
@@ -152,7 +180,7 @@ export function NotificationSubscribeButton() {
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="relative flex flex-col items-end">
       {status === "denied" ? (
         <p className="text-xs text-muted-foreground">
           notifications are blocked. enable them in your browser settings.
@@ -169,12 +197,14 @@ export function NotificationSubscribeButton() {
           {busy ? "enabling…" : "enable browser notifications"}
         </Button>
       )}
-      <p
-        className={cn("min-h-4 text-xs leading-4 text-danger")}
-        aria-live="polite"
-      >
-        {error ?? ""}
-      </p>
+      {error ? (
+        <p
+          className="absolute left-0 right-0 top-full mt-1 text-right text-xs leading-4 text-danger"
+          aria-live="polite"
+        >
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
