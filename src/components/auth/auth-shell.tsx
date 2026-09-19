@@ -205,7 +205,7 @@ export function AuthShell({ children, title, description }: AuthShellProps) {
           <p className="text-base leading-relaxed text-muted-foreground">
             built by ·{" "}
             <a
-              href="https://x.com/Bhushan4work_"
+              href="https://x.com/bhushan4work"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Follow on X (Twitter)"
