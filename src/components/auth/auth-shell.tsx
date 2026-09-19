@@ -202,9 +202,27 @@ export function AuthShell({ children, title, description }: AuthShellProps) {
 
         {/* Bottom legal line */}
         <div className="px-6 pb-8 text-center">
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            recall data provided by the u.s. national highway traffic safety
-            administration (nhtsa).
+          <p className="text-base leading-relaxed text-muted-foreground">
+            built by ·{" "}
+            <a
+              href="https://x.com/Bhushan4work_"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow on X (Twitter)"
+              className="transition-colors hover:text-foreground"
+            >
+              twitter
+            </a>{" "}
+            ·{" "}
+            <a
+              href="https://www.linkedin.com/in/bhushan4work/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Connect on LinkedIn"
+              className="transition-colors hover:text-foreground"
+            >
+              linkedin
+            </a>
           </p>
         </div>
       </div>

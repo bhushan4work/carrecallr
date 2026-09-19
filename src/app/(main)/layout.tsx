@@ -55,9 +55,27 @@ export default function MainLayout({
 
       <footer className="border-t border-border">
         <Container>
-          <p className="py-5 text-center text-xs text-muted-foreground">
-            recall data provided by the u.s. national highway traffic safety
-            administration (nhtsa).
+          <p className="py-5 text-center text-sm text-muted-foreground">
+            built by ·{" "}
+            <a
+              href="https://x.com/PLACEHOLDER"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow on X (Twitter)"
+              className="transition-colors hover:text-foreground"
+            >
+              twitter
+            </a>{" "}
+            ·{" "}
+            <a
+              href="https://linkedin.com/in/PLACEHOLDER"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Connect on LinkedIn"
+              className="transition-colors hover:text-foreground"
+            >
+              linkedin
+            </a>
           </p>
         </Container>
       </footer>
